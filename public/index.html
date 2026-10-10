@@ -6,35 +6,38 @@
 <title>Market Dashboard</title>
 <meta name="description" content="A daily catch-up on the market: Market, Headlines, Watchlist and Themes.">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#15171a" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Market">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="/styles.css">
 <script>
-  // ?theme=dark|light forces a theme (handy for checking both); otherwise follow the system.
+  // ?theme=dark|light, then the toggle's saved choice; otherwise follow the system.
   try {
-    const t = new URLSearchParams(location.search).get("theme");
+    const q = new URLSearchParams(location.search).get("theme");
+    const t = q === "dark" || q === "light" ? q : localStorage.getItem("md-theme");
     if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
   } catch (e) {}
 </script>
 </head>
 <body>
+<header class="bar">
+  <div class="bar-inner">
+    <span class="bar-title" id="bar-title" aria-hidden="true"></span>
+    <div class="top-actions">
+      <button class="btn quiet icon" id="theme-btn" type="button"></button>
+      <button class="btn quiet" id="refresh" type="button" title="Refresh prices and headlines" aria-label="Refresh"><span class="spin" aria-hidden="true">↻</span><span class="label">Refresh</span></button>
+      <button class="btn" id="login-btn" type="button" hidden>Log in</button>
+      <button class="btn" id="edit-btn" type="button" aria-pressed="false" hidden>Edit</button>
+      <button class="btn quiet" id="logout-btn" type="button" hidden>Log out</button>
+    </div>
+  </div>
+</header>
+
 <div class="page">
   <header class="top">
-    <div class="top-row">
-      <h1 id="today">Market</h1>
-      <div class="top-actions">
-        <button class="btn quiet" id="refresh" type="button" title="Refresh prices and headlines"><span class="spin" aria-hidden="true">↻</span> Refresh</button>
-        <button class="btn" id="login-btn" type="button" hidden>Log in</button>
-        <button class="btn" id="edit-btn" type="button" aria-pressed="false" hidden>Edit</button>
-        <button class="btn quiet" id="logout-btn" type="button" hidden>Log out</button>
-      </div>
-    </div>
+    <h1 id="today">Market</h1>
     <p class="status" id="status" aria-live="polite"></p>
     <p class="summary" id="summary"></p>
     <p class="notice" id="notice" role="status" hidden></p>

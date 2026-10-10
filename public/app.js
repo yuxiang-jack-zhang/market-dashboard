@@ -238,6 +238,8 @@ function restore() {
 function renderHeader() {
   const now = new Date();
   $("#today").replaceChildren(h("span", { class: "long" }, etLongDate.format(now)), h("span", { class: "short" }, etShortDate.format(now)));
+  $("#bar-title").replaceChildren(
+    h("span", { class: `dot ${state.market?.state ?? "closed"}` }), etShortDate.format(now));
 
   const status = $("#status");
   status.replaceChildren();
@@ -1079,7 +1081,61 @@ async function loadHeadlines() {
   if (!document.hidden) headlinesTimer = setTimeout(loadHeadlines, HEADLINE_POLL);
 }
 
+// --- Theme -------------------------------------------------------------------------
+
+const systemDark = matchMedia("(prefers-color-scheme: dark)");
+const systemTheme = () => (systemDark.matches ? "dark" : "light");
+const currentTheme = () => document.documentElement.dataset.theme || systemTheme();
+
+function themeIcon(dark) {
+  const a = { width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" };
+  if (dark) {
+    const rays = [[12, 2, 12, 4], [12, 20, 12, 22], [2, 12, 4, 12], [20, 12, 22, 12], [4.9, 4.9, 6.3, 6.3], [17.7, 17.7, 19.1, 19.1], [4.9, 19.1, 6.3, 17.7], [17.7, 6.3, 19.1, 4.9]];
+    return svg("svg", a, svg("circle", { cx: "12", cy: "12", r: "4.2" }),
+      ...rays.map(([x1, y1, x2, y2]) => svg("line", { x1: String(x1), y1: String(y1), x2: String(x2), y2: String(y2) })));
+  }
+  return svg("svg", a, svg("path", { d: "M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11z" }));
+}
+
+function renderTheme() {
+  const t = document.documentElement.dataset.theme;
+  const dark = currentTheme() === "dark";
+  const btn = $("#theme-btn");
+  btn.replaceChildren(themeIcon(dark));
+  btn.title = dark ? "Switch to light mode" : "Switch to dark mode";
+  btn.setAttribute("aria-label", btn.title);
+  // The browser chrome follows the page, not just the system.
+  for (const m of $$('meta[name="theme-color"]')) {
+    const d = t ? t === "dark" : m.media.includes("dark");
+    m.content = d ? "#000000" : "#ffffff";
+  }
+}
+
+function toggleTheme() {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  const apply = () => {
+    // Picking what the system already shows goes back to following the system.
+    const follow = next === systemTheme();
+    if (follow) delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = next;
+    try {
+      if (follow) localStorage.removeItem("md-theme");
+      else localStorage.setItem("md-theme", next);
+    } catch (e) {}
+    renderTheme();
+  };
+  // A cross-fade instead of an abrupt brightness jump.
+  if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(apply);
+  else apply();
+}
+
 function wire() {
+  renderTheme();
+  $("#theme-btn").addEventListener("click", toggleTheme);
+  systemDark.addEventListener("change", renderTheme);
+  // Once the large date scrolls under the bar, the bar shows a compact title and its edge.
+  new IntersectionObserver(([e]) => document.body.classList.toggle("scrolled", !e.isIntersecting),
+    { rootMargin: "-52px 0px 0px 0px" }).observe($("#today"));
   $("#refresh").addEventListener("click", () => {
     loadQuotes();
     loadHeadlines();
