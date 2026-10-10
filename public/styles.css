@@ -225,6 +225,16 @@ body.scrolled .bar-title { opacity: 1; transform: none; }
   color: var(--ink-2);
 }
 .summary b { font-weight: 600; color: var(--ink); margin-right: 6px; }
+.notice .jump {
+  all: unset;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 2px;
+}
+.notice .jump:hover { text-decoration-color: currentColor; }
+.notice .jump:focus-visible { outline: 3px solid color-mix(in srgb, var(--focus) 55%, transparent); border-radius: 3px; }
 .notice {
   margin: 6px 0 0;
   padding: 8px 12px;
@@ -310,7 +320,21 @@ body.scrolled .bar-title { opacity: 1; transform: none; }
 .chg.unusual.up { background: var(--up-wash); color: var(--up-strong); }
 .chg.unusual.down { background: var(--down-wash); color: var(--down-strong); }
 .sigma { font-size: 12px; color: var(--muted); margin-left: 8px; white-space: nowrap; }
-.stale-mark { color: var(--warn); font-size: 12px; margin-left: 4px; }
+.stale-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 15px; height: 15px;
+  margin-left: 6px;
+  vertical-align: 2px;
+  border-radius: 50%;
+  background: var(--dot-ext);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+.tile-last .stale-mark { vertical-align: 4px; }
 
 /* --- Sparkline and range bar ------------------------------------------------ */
 
@@ -551,6 +575,9 @@ body.scrolled .bar-title { opacity: 1; transform: none; }
 
 @media (max-width: 860px) {
   .c-range { display: none; }
+  /* The 1M column is the last visible one, so it carries the row's rounded end. */
+  body:not(.editing) .table tbody.item td.c-spark { border-radius: 0 10px 10px 0; }
+  body:not(.editing) .table tbody.item.open .main td.c-spark { border-bottom-right-radius: 0; }
 }
 @media (max-width: 640px) {
   .c-w, .c-ytd { display: none; }
@@ -702,6 +729,16 @@ dialog.login::backdrop {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 20px;
+}
+
+/* --- Symbols that couldn't be refreshed ------------------------------------- */
+
+.tile.stale, .tile.missing,
+.table tbody.item.stale td, .table tbody.item.missing td { background: var(--warn-wash); --ring: transparent; }
+.missing .c-last, .missing .tile-last { color: var(--warn); }
+.tile.flash, .table tbody.item.flash td { animation: flash 1.6s ease-out; }
+@keyframes flash {
+  0%, 30% { background: color-mix(in srgb, var(--dot-ext) 38%, transparent); }
 }
 
 /* --- Accessibility preferences ---------------------------------------------- */
