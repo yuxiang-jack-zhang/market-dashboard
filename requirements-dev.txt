@@ -1,0 +1,5 @@
+# Local development and tests only; Vercel installs from pyproject.toml.
+-e .
+uvicorn>=0.30
+pytest>=8
+httpx2

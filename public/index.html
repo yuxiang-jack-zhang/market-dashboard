@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Market Dashboard</title>
+<meta name="description" content="A daily catch-up on the market: Market, Headlines, Watchlist and Themes.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fbfbf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#15171a" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Market">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="/styles.css">
+<script>
+  // ?theme=dark|light forces a theme (handy for checking both); otherwise follow the system.
+  try {
+    const t = new URLSearchParams(location.search).get("theme");
+    if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="top-row">
+      <h1 id="today">Market</h1>
+      <div class="top-actions">
+        <button class="btn quiet" id="refresh" type="button" title="Refresh prices and headlines"><span class="spin" aria-hidden="true">↻</span> Refresh</button>
+        <button class="btn" id="login-btn" type="button" hidden>Log in</button>
+        <button class="btn" id="edit-btn" type="button" aria-pressed="false" hidden>Edit</button>
+        <button class="btn quiet" id="logout-btn" type="button" hidden>Log out</button>
+      </div>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+    <p class="summary" id="summary"></p>
+    <p class="notice" id="notice" role="status" hidden></p>
+  </header>
+
+  <main>
+    <section class="section" id="market" aria-labelledby="market-h">
+      <div class="section-head"><h2 id="market-h">Market</h2><span class="section-meta" id="market-meta"></span></div>
+      <div id="market-body"></div>
+    </section>
+
+    <section class="section" id="headlines" aria-labelledby="headlines-h">
+      <div class="section-head"><h2 id="headlines-h">Headlines</h2><span class="section-meta">FT · NYT · WSJ</span></div>
+      <div id="headlines-body"></div>
+    </section>
+
+    <section class="section" id="watchlist" aria-labelledby="watchlist-h">
+      <div class="section-head"><h2 id="watchlist-h">Watchlist</h2></div>
+      <div id="watchlist-body"></div>
+    </section>
+
+    <section class="section" id="themes" aria-labelledby="themes-h">
+      <div class="section-head"><h2 id="themes-h">Themes</h2></div>
+      <div id="themes-body"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Prices: Yahoo Finance via yfinance · Rates: FRED · Times in ET</span>
+    <span>Shaded day moves are 2σ or more, where σ is the RMS of the Symbol's last 20 daily moves.</span>
+  </footer>
+</div>
+
+<dialog class="login" id="login">
+  <h2>Log in to edit</h2>
+  <p>Editing Groups needs the dashboard password. You stay logged in on this device for 30 days.</p>
+  <form method="dialog" id="login-form">
+    <input type="text" name="username" autocomplete="username" value="dashboard" hidden>
+    <input type="password" name="password" autocomplete="current-password" placeholder="Password" required aria-label="Password">
+    <p class="error" id="login-error" role="alert" hidden></p>
+    <div class="row">
+      <button class="btn quiet" type="button" id="login-cancel">Cancel</button>
+      <button class="btn" type="submit" aria-pressed="true">Log in</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="tip" role="tooltip" hidden></div>
+
+<script src="/vendor/Sortable.min.js" defer></script>
+<script src="/app.js" type="module"></script>
+</body>
+</html>

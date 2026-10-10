@@ -1,0 +1,17 @@
+[project]
+name = "market-dashboard"
+version = "0.1.0"
+description = "Daily market catch-up: Market, Headlines, Watchlist and Themes"
+requires-python = "==3.12.*"
+dependencies = [
+  "fastapi>=0.142",
+  "yfinance>=1.7",
+  "psycopg[binary]>=3.3",
+  "requests>=2.32",
+]
+
+[tool.vercel]
+entrypoint = "app.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
