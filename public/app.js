@@ -277,26 +277,48 @@ function renderHeader() {
   const notice = $("#notice");
   const asOf = state.quotesAsOf ? new Date(state.quotesAsOf) : null;
   let msg = null;
-  if (state.groupsError && !state.groups) msg = `Couldn't load your Groups: ${state.groupsError}`;
+  if (state.groupsError && !state.groups) msg = [`Couldn't load your Groups: ${state.groupsError}`];
   else if (state.quotesError) {
-    msg = asOf
+    msg = [asOf
       ? `Couldn't refresh prices (${state.quotesError}). Showing prices from ${timeET(asOf)}.`
-      : `Couldn't load prices: ${state.quotesError}`;
+      : `Couldn't load prices: ${state.quotesError}`];
   } else if (m?.state === "open" && asOf && Date.now() - asOf > STALE_AFTER) {
-    msg = `Prices are ${Math.round((Date.now() - asOf) / 60_000)} min old.`;
-  } else if (state.stale.length) {
-    const n = state.stale.length;
-    msg = `${n} Symbol${n > 1 ? "s" : ""} couldn't be refreshed; showing the last saved price${n > 1 ? "s" : ""}.`;
+    msg = [`Prices are ${Math.round((Date.now() - asOf) / 60_000)} min old.`];
+  } else {
+    const stale = state.stale.filter((k) => meta.has(k));
+    const missing = Object.keys(state.errors).filter((k) => meta.has(k) && !state.quotes[k]);
+    msg = [];
+    if (stale.length) msg.push("Couldn't refresh ", ...symbolLinks(stale), `; showing ${stale.length > 1 ? "their" : "its"} last saved price${stale.length > 1 ? "s" : ""}.`);
+    if (missing.length) msg.push(stale.length ? " No data for " : "No data for ", ...symbolLinks(missing), ".");
+    if (!msg.length) msg = null;
   }
   notice.hidden = !msg;
-  notice.textContent = msg ?? "";
-
-  const bad = Object.keys(state.errors);
-  const metaEl = $("#market-meta");
-  metaEl.textContent = bad.length ? `${bad.length} unavailable` : "";
-  metaEl.title = bad.length ? bad.map((k) => `${k}: ${state.errors[k]}`).join("\n") : "";
+  notice.replaceChildren(...(msg ?? []));
 
   renderControls();
+}
+
+// "MU, SNDK and 2 more": each name jumps to where that Symbol is on the page.
+function symbolLinks(keys, max = 6) {
+  const out = [];
+  keys.slice(0, max).forEach((k, i) => {
+    if (i) out.push(", ");
+    const item = meta.get(k);
+    const name = item.subsection ? item.label || item.symbol : item.symbol; // as the tile or row shows it
+    out.push(h("button", { class: "jump", type: "button", title: `Show ${name}`, onclick: () => jumpTo(k) }, name));
+  });
+  if (keys.length > max) out.push(` and ${keys.length - max} more`);
+  return out;
+}
+
+function jumpTo(key) {
+  const el = $$(`[data-key="${CSS.escape(key)}"]`).find((e) => e.offsetParent !== null);
+  if (!el) return;
+  const smooth = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ block: "center", behavior: smooth ? "smooth" : "auto" });
+  el.classList.remove("flash");
+  void el.offsetWidth; // restart the animation on a repeat click
+  el.classList.add("flash");
 }
 
 function renderControls() {
@@ -402,7 +424,7 @@ function fillField(el, field, item, q) {
   switch (field) {
     case "last":
       el.replaceChildren(q ? fmtLevel(item, q.last) : state.errors[item.key] ? "n/a" : "–");
-      if (q?.stale) el.append(h("span", { class: "stale-mark", title: "Not refreshed; showing the last saved price" }, "•"));
+      if (q?.stale) el.append(h("span", { class: "stale-mark", title: "Not refreshed; showing the last saved price", "aria-label": "not refreshed" }, "!"));
       break;
     case "day":
       el.replaceChildren(...dayChange(item, q));
@@ -444,6 +466,8 @@ function fillValues(root = document) {
     const item = meta.get(el.dataset.key);
     if (!item) continue;
     const q = state.quotes[el.dataset.key];
+    el.classList.toggle("stale", !!q?.stale);
+    el.classList.toggle("missing", !q && !!state.errors[el.dataset.key]);
     for (const f of $$("[data-f]", el)) fillField(f, f.dataset.f, item, q);
   }
   for (const el of $$("[data-f='avg']", root)) {
