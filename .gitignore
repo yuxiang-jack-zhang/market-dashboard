@@ -9,3 +9,7 @@ __pycache__/
 .vercel
 .env*
 .claude/
+
+# Agent context; kept locally, not published
+CONTEXT.md
+node_modules/
